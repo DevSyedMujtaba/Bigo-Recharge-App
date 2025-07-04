@@ -13,6 +13,10 @@ class CartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<CartProvider>(context);
+    // Add debug print for PaymentBottomSheet entry point
+    // (Find the showModalBottomSheet for PaymentBottomSheet and add this print)
+    // Example:
+    // print('DEBUG: CartScreen opening PaymentBottomSheet with amount: ...');
     return Scaffold(
       backgroundColor: const Color(0xFF18192A),
       body: SafeArea(
@@ -198,21 +202,11 @@ class CartScreen extends StatelessWidget {
                           context,
                           listen: false,
                         ).isLoggedIn;
-                        final cart = Provider.of<CartProvider>(
-                          context,
-                          listen: false,
-                        );
-                        if (cart.items.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Your cart is empty. Please add items before placing an order.',
-                              ),
-                            ),
-                          );
-                          return;
-                        }
                         if (isLoggedIn) {
+                          final cart = Provider.of<CartProvider>(
+                            context,
+                            listen: false,
+                          );
                           showModalBottomSheet(
                             context: context,
                             isScrollControlled: true,
@@ -222,7 +216,7 @@ class CartScreen extends StatelessWidget {
                               discountedPrice: null,
                               promoCode: null,
                               promoCodeApplied: false,
-                              amount: null,
+                              amount: cart.totalPrice,
                             ),
                           );
                         } else {
@@ -312,6 +306,9 @@ class PaymentBottomSheetState extends State<PaymentBottomSheet> {
   @override
   void initState() {
     super.initState();
+    print(
+      '===STRIPE_DEBUG=== PaymentBottomSheet initState - widget.amount:  ${widget.amount}',
+    );
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     if (authProvider.user != null) {
       _fullNameController.text = authProvider.user!.name;
@@ -439,6 +436,9 @@ class PaymentBottomSheetState extends State<PaymentBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    print(
+      '===STRIPE_DEBUG=== PaymentBottomSheet build - widget.amount:  ${widget.amount}, _cartTotal:  ${_cartTotal}, _discountedTotal:  ${_discountedTotal}',
+    );
     final Color bgColor = const Color(0xFF23243A);
     final Color accent = const Color(0xFF8F5CF7);
     final Color border = Colors.white24;
@@ -846,6 +846,9 @@ class PaymentBottomSheetState extends State<PaymentBottomSheet> {
                 onPressed: _isLoading
                     ? null
                     : () async {
+                        print(
+                          '===STRIPE_DEBUG=== Payment button pressed - widget.amount: ￿${widget.amount}, _cartTotal: ￿${_cartTotal}, _discountedTotal: ￿${_discountedTotal}',
+                        );
                         setState(() {
                           _bigoIdError = null;
                           _cardError = null;
@@ -865,10 +868,13 @@ class PaymentBottomSheetState extends State<PaymentBottomSheet> {
                           });
                           return;
                         }
-                        if (widget.amount == null) {
+                        double amountToPay = _discountedTotal;
+                        if (amountToPay <= 0) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Payment amount is missing.'),
+                              content: Text(
+                                'Payment amount is missing or invalid.',
+                              ),
                             ),
                           );
                           setState(() {
@@ -876,9 +882,9 @@ class PaymentBottomSheetState extends State<PaymentBottomSheet> {
                           });
                           return;
                         }
-                        final amountInCents = (widget.amount! * 100).toInt();
+                        final amountInCents = (amountToPay * 100).toInt();
                         print(
-                          'DEBUG: Amount sent to Stripe (in cents): $amountInCents',
+                          '===STRIPE_DEBUG=== Amount sent to Stripe (in cents): $amountInCents',
                         );
                         final clientSecret = await createPaymentIntent(
                           amount: amountInCents,
@@ -901,6 +907,10 @@ class PaymentBottomSheetState extends State<PaymentBottomSheet> {
                           _isLoading = false;
                         });
                         if (success) {
+                          Provider.of<CartProvider>(
+                            context,
+                            listen: false,
+                          ).clearCart();
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Payment successful!')),
                           );
