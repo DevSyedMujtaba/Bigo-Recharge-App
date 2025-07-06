@@ -5,9 +5,11 @@ import 'package:provider/provider.dart';
 import 'screens/splash/splash_screen.dart';
 import 'providers/auth_provider.dart';
 import 'providers/cart_provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load();
   print('Initializing Stripe...');
   Stripe.publishableKey =
       'pk_test_51Rb6soPrqL3Cx7E1EANctkBEsubquBR7W911AcD6wO8zT3C2QqrxF0TUjZONqmZCgCFPQtZUqPNs3aoDwqEDHolK00tU2dMzIj';
@@ -32,6 +34,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'BIGO Recharge',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         // This is the theme of your application.
         //
