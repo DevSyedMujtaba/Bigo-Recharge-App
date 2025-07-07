@@ -28,6 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
+    if (!mounted) return;
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
     final authService = AuthService();
@@ -35,20 +36,25 @@ class _LoginScreenState extends State<LoginScreen> {
       email: _emailController.text.trim(),
       password: _passwordController.text,
     );
+    if (!mounted) return;
     setState(() => _isLoading = false);
     if (result['success']) {
       // Store user info in provider
       final userData = result['data']['user'] ?? {};
+      final token = result['data']['token'] ?? result['data']['accessToken'];
       final user = User(
         id: userData['id'] ?? '',
         name: userData['name'] ?? 'User',
-        imageUrl: userData['imageUrl'] ?? 'https://randomuser.me/api/portraits/men/1.jpg',
+        imageUrl:
+            userData['imageUrl'] ??
+            'https://randomuser.me/api/portraits/men/1.jpg',
         email: userData['email'] ?? _emailController.text.trim(),
+        token: token,
       );
       Provider.of<AuthProvider>(context, listen: false).login(user);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login successful!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Login successful!')));
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const HomeRootScreen()),
       );
@@ -148,7 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: const Text(
                           'Forgot password?',
                           style: TextStyle(
-                            color: Color(0xFF8F5CF7),
+                            color: Color(0xFFEC4899),
                             fontWeight: FontWeight.w600,
                             fontSize: 13,
                           ),
@@ -172,8 +178,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderSide: BorderSide.none,
                       ),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Colors.white54),
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          color: Colors.white54,
+                        ),
                         onPressed: () {
+                          if (!mounted) return;
                           setState(() {
                             _obscurePassword = !_obscurePassword;
                           });
@@ -186,7 +198,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     height: 44,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF8F5CF7),
+                        backgroundColor: const Color(0xFFEC4899),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -204,7 +216,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           : const Icon(Icons.login, color: Colors.white),
                       label: Text(
                         _isLoading ? 'Signing In...' : 'Sign In',
-                        style: const TextStyle(fontSize: 16, color: Colors.white),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
@@ -218,6 +233,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       GestureDetector(
                         onTap: () {
+                          if (!mounted) return;
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) => const SignupScreen(),
@@ -227,7 +243,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: const Text(
                           'Sign Up',
                           style: TextStyle(
-                            color: Color(0xFF8F5CF7),
+                            color: Color(0xFFEC4899),
                             fontWeight: FontWeight.bold,
                             fontSize: 13,
                           ),
@@ -252,7 +268,9 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(child: Text('Home Screen')), // Replace with your actual home screen
+      body: Center(
+        child: Text('Home Screen'),
+      ), // Replace with your actual home screen
     );
   }
-} 
+}

@@ -63,6 +63,7 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   Future<void> _signup() async {
+    if (!mounted) return;
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
     final authService = AuthService();
@@ -72,6 +73,7 @@ class _SignupScreenState extends State<SignupScreen> {
       password: _passwordController.text,
       confirmPassword: _confirmPasswordController.text,
     );
+    if (!mounted) return;
     setState(() => _isLoading = false);
     if (result['success']) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -121,10 +123,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 const Text(
                   'Sign up to get started with Bigo Recharge.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white70,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.white70),
                 ),
                 const SizedBox(height: 2),
                 const Text(
@@ -142,7 +141,10 @@ class _SignupScreenState extends State<SignupScreen> {
                   style: const TextStyle(color: Colors.white, fontSize: 14),
                   decoration: InputDecoration(
                     hintText: 'Your Name',
-                    hintStyle: const TextStyle(color: Colors.white54, fontSize: 13),
+                    hintStyle: const TextStyle(
+                      color: Colors.white54,
+                      fontSize: 13,
+                    ),
                     filled: true,
                     fillColor: const Color(0xFF18192A),
                     border: const OutlineInputBorder(
@@ -167,7 +169,10 @@ class _SignupScreenState extends State<SignupScreen> {
                   style: const TextStyle(color: Colors.white, fontSize: 14),
                   decoration: InputDecoration(
                     hintText: 'name@example.com',
-                    hintStyle: const TextStyle(color: Colors.white54, fontSize: 13),
+                    hintStyle: const TextStyle(
+                      color: Colors.white54,
+                      fontSize: 13,
+                    ),
                     filled: true,
                     fillColor: const Color(0xFF18192A),
                     border: const OutlineInputBorder(
@@ -193,7 +198,10 @@ class _SignupScreenState extends State<SignupScreen> {
                   style: const TextStyle(color: Colors.white, fontSize: 14),
                   decoration: InputDecoration(
                     hintText: 'Password',
-                    hintStyle: const TextStyle(color: Colors.white54, fontSize: 13),
+                    hintStyle: const TextStyle(
+                      color: Colors.white54,
+                      fontSize: 13,
+                    ),
                     filled: true,
                     fillColor: const Color(0xFF18192A),
                     border: const OutlineInputBorder(
@@ -201,8 +209,14 @@ class _SignupScreenState extends State<SignupScreen> {
                       borderSide: BorderSide.none,
                     ),
                     suffixIcon: IconButton(
-                      icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Colors.white54),
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Colors.white54,
+                      ),
                       onPressed: () {
+                        if (!mounted) return;
                         setState(() {
                           _obscurePassword = !_obscurePassword;
                         });
@@ -227,7 +241,10 @@ class _SignupScreenState extends State<SignupScreen> {
                   style: const TextStyle(color: Colors.white, fontSize: 14),
                   decoration: InputDecoration(
                     hintText: 'Confirm Password',
-                    hintStyle: const TextStyle(color: Colors.white54, fontSize: 13),
+                    hintStyle: const TextStyle(
+                      color: Colors.white54,
+                      fontSize: 13,
+                    ),
                     filled: true,
                     fillColor: const Color(0xFF18192A),
                     border: const OutlineInputBorder(
@@ -235,8 +252,14 @@ class _SignupScreenState extends State<SignupScreen> {
                       borderSide: BorderSide.none,
                     ),
                     suffixIcon: IconButton(
-                      icon: Icon(_obscureConfirmPassword ? Icons.visibility_off : Icons.visibility, color: Colors.white54),
+                      icon: Icon(
+                        _obscureConfirmPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Colors.white54,
+                      ),
                       onPressed: () {
+                        if (!mounted) return;
                         setState(() {
                           _obscureConfirmPassword = !_obscureConfirmPassword;
                         });
@@ -249,7 +272,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   height: 44,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF8F5CF7),
+                      backgroundColor: const Color(0xFFEC4899),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -276,7 +299,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       child: const Text(
                         'Sign In',
                         style: TextStyle(
-                          color: Color(0xFF8F5CF7),
+                          color: Color(0xFFEC4899),
                           fontWeight: FontWeight.bold,
                           fontSize: 13,
                         ),
@@ -291,4 +314,4 @@ class _SignupScreenState extends State<SignupScreen> {
       ),
     );
   }
-} 
+}

@@ -38,4 +38,4 @@ class CartItem {
     price: (json['price'] as num).toDouble(),
     quantity: json['quantity'],
   );
-} 
+}

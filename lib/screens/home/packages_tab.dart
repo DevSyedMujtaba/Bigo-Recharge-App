@@ -25,8 +25,9 @@ class _PackagesTabState extends State<PackagesTab> {
 
   void _goToCartTab() {
     // Find the nearest HomeRootScreen state and set the index to 2 (Cart tab)
-    final homeRootState = context.findAncestorStateOfType<HomeRootScreenState>();
-    if (homeRootState != null) {
+    final homeRootState = context
+        .findAncestorStateOfType<HomeRootScreenState>();
+    if (homeRootState != null && homeRootState.mounted) {
       homeRootState.setState(() {
         homeRootState.selectedIndex = 2;
       });
@@ -59,7 +60,11 @@ class _PackagesTabState extends State<PackagesTab> {
                 future: _packagesFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator(color: Color(0xFF8F5CF7)));
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFFEC4899),
+                      ),
+                    );
                   } else if (snapshot.hasError) {
                     return Center(
                       child: Text(
@@ -69,23 +74,33 @@ class _PackagesTabState extends State<PackagesTab> {
                     );
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                     return const Center(
-                      child: Text('No packages found', style: TextStyle(color: Colors.white)),
+                      child: Text(
+                        'No packages found',
+                        style: TextStyle(color: Colors.white),
+                      ),
                     );
                   }
                   final packages = snapshot.data!;
                   return GridView.builder(
-                    padding: const EdgeInsets.only(left: 10, right: 10, bottom: 12, top: 16),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 14,
-                      mainAxisSpacing: 18,
-                      childAspectRatio: 0.75,
+                    padding: const EdgeInsets.only(
+                      left: 10,
+                      right: 10,
+                      bottom: 12,
+                      top: 16,
                     ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 14,
+                          mainAxisSpacing: 18,
+                          childAspectRatio: 0.75,
+                        ),
                     itemCount: packages.length,
                     itemBuilder: (context, index) {
                       final pkg = packages[index];
                       Widget? imageWidget;
-                      if (pkg.image != null && pkg.image!.startsWith('data:image')) {
+                      if (pkg.image != null &&
+                          pkg.image!.startsWith('data:image')) {
                         try {
                           final base64Str = pkg.image!.split(',').last;
                           imageWidget = Image.memory(
@@ -104,12 +119,18 @@ class _PackagesTabState extends State<PackagesTab> {
                           decoration: BoxDecoration(
                             color: const Color(0xFF18192A),
                             borderRadius: BorderRadius.circular(18),
-                            border: Border.all(color: Colors.white24, width: 1.0),
+                            border: Border.all(
+                              color: Colors.white24,
+                              width: 1.0,
+                            ),
                           ),
                           child: Stack(
                             children: [
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 8,
+                                ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
@@ -118,10 +139,14 @@ class _PackagesTabState extends State<PackagesTab> {
                                       children: [
                                         if (pkg.discountAmount > 0)
                                           Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 6,
+                                              vertical: 2,
+                                            ),
                                             decoration: BoxDecoration(
-                                              color: const Color(0xFF8F5CF7),
-                                              borderRadius: BorderRadius.circular(10),
+                                              color: const Color(0xFFEC4899),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
                                             ),
                                             child: Text(
                                               'Save \$${pkg.discountAmount.toStringAsFixed(2)}',
@@ -143,7 +168,7 @@ class _PackagesTabState extends State<PackagesTab> {
                                       pkg.diamondAmount.toString(),
                                       textAlign: TextAlign.center,
                                       style: const TextStyle(
-                                        color: Color(0xFF8F5CF7),
+                                        color: Color(0xFFEC4899),
                                         fontWeight: FontWeight.bold,
                                         fontSize: 15,
                                       ),
@@ -152,7 +177,7 @@ class _PackagesTabState extends State<PackagesTab> {
                                       'Diamonds',
                                       textAlign: TextAlign.center,
                                       style: const TextStyle(
-                                        color: Color(0xFF8F5CF7),
+                                        color: Color(0xFFEC4899),
                                         fontWeight: FontWeight.bold,
                                         fontSize: 12,
                                       ),
@@ -170,7 +195,8 @@ class _PackagesTabState extends State<PackagesTab> {
                                       ),
                                     ),
                                     const SizedBox(height: 1),
-                                    if (pkg.description != null && pkg.description!.isNotEmpty)
+                                    if (pkg.description != null &&
+                                        pkg.description!.isNotEmpty)
                                       Text(
                                         pkg.description!,
                                         textAlign: TextAlign.center,
@@ -197,31 +223,49 @@ class _PackagesTabState extends State<PackagesTab> {
                                       height: 32,
                                       child: ElevatedButton(
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(0xFF8F5CF7),
+                                          backgroundColor: const Color(
+                                            0xFFEC4899,
+                                          ),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(8),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
                                           ),
                                           padding: EdgeInsets.zero,
                                           elevation: 0,
                                         ),
                                         onPressed: () {
-                                          Provider.of<CartProvider>(context, listen: false).addToCart(
+                                          Provider.of<CartProvider>(
+                                            context,
+                                            listen: false,
+                                          ).addToCart(
                                             CartItem(
                                               id: pkg.id,
                                               name: pkg.name,
-                                              image: null, // You can use pkg.image if it's a URL
+                                              image:
+                                                  null, // You can use pkg.image if it's a URL
                                               price: pkg.price,
                                               quantity: 1,
                                             ),
                                           );
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(content: Text('${pkg.name} added to cart!')),
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                '${pkg.name} added to cart!',
+                                              ),
+                                            ),
                                           );
                                           //_goToCartTab();
                                         },
                                         child: const Text(
                                           'Add to Cart',
-                                          style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white),
+                                          style: TextStyle(
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -243,4 +287,4 @@ class _PackagesTabState extends State<PackagesTab> {
       ),
     );
   }
-} 
+}

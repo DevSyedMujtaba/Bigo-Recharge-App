@@ -6,6 +6,7 @@ import '../auth/login_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -13,6 +14,7 @@ class CartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<CartProvider>(context);
+    final TextEditingController _cartBigoIdController = TextEditingController();
     // Add debug print for PaymentBottomSheet entry point
     // (Find the showModalBottomSheet for PaymentBottomSheet and add this print)
     // Example:
@@ -186,13 +188,14 @@ class CartScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 18),
+
+                  const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF8F5CF7),
+                        backgroundColor: const Color(0xFFEC4899),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -212,11 +215,16 @@ class CartScreen extends StatelessWidget {
                             isScrollControlled: true,
                             backgroundColor: Colors.transparent,
                             builder: (context) => PaymentBottomSheet(
-                              bigoId: null,
+                              bigoId: _cartBigoIdController.text,
                               discountedPrice: null,
                               promoCode: null,
                               promoCodeApplied: false,
                               amount: cart.totalPrice,
+                              quantity: cart.totalItems,
+                              productName: null,
+                              productPrice: null,
+                              productImage: null,
+                              diamondAmount: null,
                             ),
                           );
                         } else {
@@ -255,12 +263,24 @@ class PaymentBottomSheet extends StatefulWidget {
   final String? promoCode;
   final bool promoCodeApplied;
   final double? amount;
+  final int? quantity;
+  final String? productName;
+  final double? productPrice;
+  final String? productImage;
+  final int? diamondAmount;
+  final String? productId;
   const PaymentBottomSheet({
     this.bigoId,
     this.discountedPrice,
     this.promoCode,
     this.promoCodeApplied = false,
     this.amount,
+    this.quantity,
+    this.productName,
+    this.productPrice,
+    this.productImage,
+    this.diamondAmount,
+    this.productId,
     Key? key,
   }) : super(key: key);
 
@@ -341,7 +361,7 @@ class PaymentBottomSheetState extends State<PaymentBottomSheet> {
     String currency = 'usd',
   }) async {
     final url = Uri.parse(
-      'https://bigo-recharge-backend.onrender.com/api/stripe/create-payment-intent',
+      dotenv.env['BACKEND_API_BASE_URL']! + '/stripe/create-payment-intent',
     );
     try {
       final response = await http.post(
@@ -383,6 +403,7 @@ class PaymentBottomSheetState extends State<PaymentBottomSheet> {
   }
 
   Future<void> _applyPromo() async {
+    if (!mounted) return;
     setState(() {
       _isApplyingPromo = true;
       _promoMsg = null;
@@ -390,7 +411,7 @@ class PaymentBottomSheetState extends State<PaymentBottomSheet> {
     });
     final code = _promoController.text.trim();
     final url = Uri.parse(
-      'https://bigo-recharge-backend.onrender.com/api/promo-codes/validate?code=$code',
+      dotenv.env['BACKEND_API_BASE_URL']! + '/promo-codes/validate?code=$code',
     );
     try {
       final response = await http.get(url);
@@ -428,9 +449,79 @@ class PaymentBottomSheetState extends State<PaymentBottomSheet> {
         _discountPercent = null;
       });
     } finally {
+      if (!mounted) return;
       setState(() {
         _isApplyingPromo = false;
       });
+    }
+  }
+
+  Future<bool> _createOrder() async {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final cartProvider = Provider.of<CartProvider>(context, listen: false);
+      final user = authProvider.user;
+      if (user == null) return false;
+      final baseUrl = dotenv.env['BACKEND_API_BASE_URL'] ?? '';
+      final url = Uri.parse('$baseUrl/orders');
+      List<Map<String, dynamic>> products;
+      if (widget.productName != null) {
+        products = [
+          {
+            'productId': widget.productId,
+            'name': widget.productName ?? '',
+            'price': widget.productPrice ?? 0.0,
+            'quantity': widget.quantity ?? 1,
+            'image': widget.productImage ?? '',
+            'diamondAmount': widget.diamondAmount ?? 0,
+          },
+        ];
+      } else {
+        products = cartProvider.items
+            .map(
+              (item) => {
+                'productId': item.id,
+                'quantity': widget.quantity ?? item.quantity,
+                'image': item.image,
+                'price': item.price,
+                'diamondAmount': 0,
+                'name': item.name,
+              },
+            )
+            .toList();
+      }
+      final totalQuantity = cartProvider.items.fold<int>(
+        0,
+        (sum, item) => sum + item.quantity,
+      );
+      final body = {
+        'userId': user.id,
+        'bigoId': _bigoIdController.text.trim(),
+        'promoCode': widget.promoCode,
+        'products': products,
+        'totalAmount': _discountedTotal,
+        'userName': user.name,
+        'userEmail': user.email,
+        'status': 'Pending',
+        'quantity': widget.quantity ?? 1,
+      };
+      if (totalQuantity > 0) {
+        body['quantity'] = totalQuantity;
+      }
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          if (authProvider.token != null)
+            'Authorization': 'Bearer ${authProvider.token}',
+        },
+        body: jsonEncode(body),
+      );
+      print('Order creation response: ${response.statusCode} ${response.body}');
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      print('Order creation error: $e');
+      return false;
     }
   }
 
@@ -440,7 +531,7 @@ class PaymentBottomSheetState extends State<PaymentBottomSheet> {
       '===STRIPE_DEBUG=== PaymentBottomSheet build - widget.amount:  ${widget.amount}, _cartTotal:  ${_cartTotal}, _discountedTotal:  ${_discountedTotal}',
     );
     final Color bgColor = const Color(0xFF23243A);
-    final Color accent = const Color(0xFF8F5CF7);
+    final Color accent = const Color(0xFFEC4899);
     final Color border = Colors.white24;
     final Color text = Colors.white;
     final Color textFaint = Colors.white70;
@@ -585,6 +676,7 @@ class PaymentBottomSheetState extends State<PaymentBottomSheet> {
               child: CardField(
                 onCardChanged: (card) {
                   print('CardField changed: card details updated');
+                  if (!mounted) return;
                   setState(() {
                     _cardDetails = card;
                     _cardError = null;
@@ -849,12 +941,14 @@ class PaymentBottomSheetState extends State<PaymentBottomSheet> {
                         print(
                           '===STRIPE_DEBUG=== Payment button pressed - widget.amount: ￿${widget.amount}, _cartTotal: ￿${_cartTotal}, _discountedTotal: ￿${_discountedTotal}',
                         );
+                        if (!mounted) return;
                         setState(() {
                           _bigoIdError = null;
                           _cardError = null;
                           _isLoading = true;
                         });
                         if (_bigoIdController.text.trim().isEmpty) {
+                          if (!mounted) return;
                           setState(() {
                             _bigoIdError = 'Bigo ID is required.';
                             _isLoading = false;
@@ -862,6 +956,7 @@ class PaymentBottomSheetState extends State<PaymentBottomSheet> {
                           return;
                         }
                         if (_cardDetails == null || !_cardDetails!.complete) {
+                          if (!mounted) return;
                           setState(() {
                             _cardError = 'Please enter complete card details.';
                             _isLoading = false;
@@ -870,6 +965,7 @@ class PaymentBottomSheetState extends State<PaymentBottomSheet> {
                         }
                         double amountToPay = _discountedTotal;
                         if (amountToPay <= 0) {
+                          if (!mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
@@ -890,6 +986,7 @@ class PaymentBottomSheetState extends State<PaymentBottomSheet> {
                           amount: amountInCents,
                         );
                         if (clientSecret == null) {
+                          if (!mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
@@ -903,19 +1000,66 @@ class PaymentBottomSheetState extends State<PaymentBottomSheet> {
                           return;
                         }
                         final success = await payWithStripe(clientSecret);
-                        setState(() {
-                          _isLoading = false;
-                        });
                         if (success) {
-                          Provider.of<CartProvider>(
-                            context,
-                            listen: false,
-                          ).clearCart();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Payment successful!')),
-                          );
-                          Navigator.of(context).pop();
+                          final orderCreated = await _createOrder();
+                          setState(() {
+                            _isLoading = false;
+                          });
+                          if (orderCreated) {
+                            if (!mounted) return;
+                            Provider.of<CartProvider>(
+                              context,
+                              listen: false,
+                            ).clearCart();
+                            showDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Order Successful'),
+                                content: const Text(
+                                  'Your order has been placed successfully!',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(
+                                        context,
+                                      ).pop(); // Close dialog
+                                      Navigator.of(
+                                        context,
+                                      ).pop(); // Close bottom sheet
+                                    },
+                                    child: const Text('OK'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          } else {
+                            if (!mounted) return;
+                            showDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Order Failed'),
+                                content: const Text(
+                                  'Payment succeeded, but failed to create order. Please contact support.',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: const Text('OK'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
                         } else {
+                          if (!mounted) return;
+                          setState(() {
+                            _isLoading = false;
+                          });
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(

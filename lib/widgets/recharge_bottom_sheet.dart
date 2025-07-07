@@ -5,6 +5,7 @@ import '../providers/auth_provider.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../screens/home/cart_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class RechargeBottomSheet extends StatefulWidget {
   final String name;
@@ -14,6 +15,9 @@ class RechargeBottomSheet extends StatefulWidget {
   final int discount;
   final String productId;
   final String? imageBase64;
+  final String? productName;
+  final double? productPrice;
+  final int? diamondAmount;
 
   const RechargeBottomSheet({
     super.key,
@@ -24,6 +28,9 @@ class RechargeBottomSheet extends StatefulWidget {
     required this.discount,
     required this.productId,
     this.imageBase64,
+    this.productName,
+    this.productPrice,
+    this.diamondAmount,
   });
 
   @override
@@ -56,15 +63,15 @@ class _RechargeBottomSheetState extends State<RechargeBottomSheet> {
   }
 
   Future<void> _applyPromo() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _errorMsg = null;
       _promoMsg = null;
     });
     final code = _promoController.text.trim();
-    final url = Uri.parse(
-      'https://bigo-recharge-backend.onrender.com/api/promo-codes/validate?code=$code',
-    );
+    final baseUrl = dotenv.env['BACKEND_API_BASE_URL'] ?? '';
+    final url = Uri.parse('$baseUrl/promo-codes/validate?code=$code');
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
@@ -119,6 +126,7 @@ class _RechargeBottomSheetState extends State<RechargeBottomSheet> {
 
   void _onBuyNow() {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (!mounted) return;
     setState(() {
       _bigoIdError = null;
     });
@@ -159,7 +167,7 @@ class _RechargeBottomSheetState extends State<RechargeBottomSheet> {
                     child: Text(
                       'Recharge account',
                       style: TextStyle(
-                        color: Color(0xFF8F5CF7),
+                        color: Color(0xFFEC4899),
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
@@ -238,7 +246,7 @@ class _RechargeBottomSheetState extends State<RechargeBottomSheet> {
                       const SizedBox(width: 8),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF8F5CF7),
+                          backgroundColor: const Color(0xFFEC4899),
                           padding: const EdgeInsets.symmetric(
                             horizontal: 14,
                             vertical: 10,
@@ -409,7 +417,7 @@ class _RechargeBottomSheetState extends State<RechargeBottomSheet> {
                       children: const [
                         Icon(
                           Icons.info_outline,
-                          color: Color(0xFF8F5CF7),
+                          color: Color(0xFFEC4899),
                           size: 13,
                         ),
                         SizedBox(width: 7),
@@ -431,7 +439,7 @@ class _RechargeBottomSheetState extends State<RechargeBottomSheet> {
                     height: 32,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF8F5CF7),
+                        backgroundColor: const Color(0xFFEC4899),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -439,6 +447,11 @@ class _RechargeBottomSheetState extends State<RechargeBottomSheet> {
                       onPressed: _isLoading
                           ? null
                           : () {
+                              final authProvider = Provider.of<AuthProvider>(
+                                context,
+                                listen: false,
+                              );
+                              if (!mounted) return;
                               setState(() {
                                 _bigoIdError = null;
                               });
@@ -446,6 +459,11 @@ class _RechargeBottomSheetState extends State<RechargeBottomSheet> {
                                 setState(() {
                                   _bigoIdError = 'BIGO ID is required.';
                                 });
+                                return;
+                              }
+                              if (!authProvider.isLoggedIn) {
+                                Navigator.of(context).pop();
+                                Navigator.pushNamed(context, '/login');
                                 return;
                               }
                               final double amountToPay =
@@ -458,6 +476,15 @@ class _RechargeBottomSheetState extends State<RechargeBottomSheet> {
                               print(
                                 'DEBUG: Amount to pay (sent to Stripe): $amountToPay',
                               );
+                              final products = [
+                                {
+                                  'name': widget.productName ?? '',
+                                  'price': widget.productPrice ?? 0.0,
+                                  'quantity': _quantity,
+                                  'image': widget.imageBase64 ?? '',
+                                  'diamondAmount': widget.diamondAmount ?? 0,
+                                },
+                              ];
                               showModalBottomSheet(
                                 context: context,
                                 isScrollControlled: true,
@@ -479,6 +506,12 @@ class _RechargeBottomSheetState extends State<RechargeBottomSheet> {
                                       _discountPercent != null &&
                                       _discountPercent! > 0,
                                   amount: amountToPay,
+                                  quantity: _quantity,
+                                  productName: widget.name,
+                                  productPrice: _basePrice!,
+                                  productImage: widget.imageBase64,
+                                  diamondAmount: widget.diamondAmount,
+                                  productId: widget.productId,
                                 ),
                               );
                             },

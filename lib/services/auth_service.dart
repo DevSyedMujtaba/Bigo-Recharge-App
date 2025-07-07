@@ -1,15 +1,15 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AuthService {
-  static const String baseUrl = 'https://bigo-recharge-backend.onrender.com/api';
-
   Future<Map<String, dynamic>> register({
     required String name,
     required String email,
     required String password,
     required String confirmPassword,
   }) async {
+    final baseUrl = dotenv.env['BACKEND_API_BASE_URL'] ?? '';
     final url = Uri.parse('$baseUrl/users/register');
     final response = await http.post(
       url,
@@ -24,7 +24,10 @@ class AuthService {
     if (response.statusCode == 200 || response.statusCode == 201) {
       return {'success': true, 'data': jsonDecode(response.body)};
     } else {
-      return {'success': false, 'message': jsonDecode(response.body)['message'] ?? 'Signup failed'};
+      return {
+        'success': false,
+        'message': jsonDecode(response.body)['message'] ?? 'Signup failed',
+      };
     }
   }
 
@@ -32,23 +35,25 @@ class AuthService {
     required String email,
     required String password,
   }) async {
+    final baseUrl = dotenv.env['BACKEND_API_BASE_URL'] ?? '';
     final url = Uri.parse('$baseUrl/users/login');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': email,
-        'password': password,
-      }),
+      body: jsonEncode({'email': email, 'password': password}),
     );
     if (response.statusCode == 200) {
       return {'success': true, 'data': jsonDecode(response.body)};
     } else {
-      return {'success': false, 'message': jsonDecode(response.body)['message'] ?? 'Login failed'};
+      return {
+        'success': false,
+        'message': jsonDecode(response.body)['message'] ?? 'Login failed',
+      };
     }
   }
 
   Future<List<Map<String, dynamic>>> fetchDiamonds() async {
+    final baseUrl = dotenv.env['BACKEND_API_BASE_URL'] ?? '';
     final url = Uri.parse('$baseUrl/products/');
     final response = await http.get(url);
     if (response.statusCode == 200) {
@@ -61,4 +66,4 @@ class AuthService {
     }
     return [];
   }
-} 
+}

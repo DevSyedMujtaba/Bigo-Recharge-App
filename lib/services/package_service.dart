@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/package.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class PackageService {
-  static const String baseUrl = 'https://bigo-recharge-backend.onrender.com/api';
-
   Future<List<Package>> fetchPackages() async {
+    final baseUrl = dotenv.env['BACKEND_API_BASE_URL'] ?? '';
+    print('DEBUG: fetchPackages using baseUrl: $baseUrl');
     final url = Uri.parse('$baseUrl/packages');
     final response = await http.get(url);
 
@@ -22,6 +23,8 @@ class PackageService {
     required int quantity,
     required String productId,
   }) async {
+    final baseUrl = dotenv.env['BACKEND_API_BASE_URL'] ?? '';
+    print('DEBUG: applyPromoCode using baseUrl: $baseUrl');
     final url = Uri.parse('$baseUrl/promo-codes/apply');
     try {
       final response = await http.post(
@@ -55,4 +58,4 @@ class PackageService {
       };
     }
   }
-} 
+}

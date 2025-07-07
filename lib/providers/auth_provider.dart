@@ -8,6 +8,7 @@ class AuthProvider with ChangeNotifier {
 
   User? get user => _user;
   bool get isLoggedIn => _user != null;
+  String? get token => _user?.token;
 
   AuthProvider() {
     _loadUser();
@@ -35,4 +36,4 @@ class AuthProvider with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     prefs.remove('user');
   }
-} 
+}

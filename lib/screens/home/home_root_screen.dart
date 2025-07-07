@@ -30,16 +30,13 @@ class HomeRootScreenState extends State<HomeRootScreen> {
       body: _screens[selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: const Color(0xFF18192A),
-        selectedItemColor: const Color(0xFF8F5CF7),
+        selectedItemColor: const Color(0xFFEC4899),
         unselectedItemColor: Colors.white70,
         type: BottomNavigationBarType.fixed,
         currentIndex: selectedIndex,
         onTap: (index) => setState(() => selectedIndex = index),
         items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
+          const BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           const BottomNavigationBarItem(
             icon: Icon(Icons.widgets),
             label: 'Packages',
@@ -56,10 +53,13 @@ class HomeRootScreenState extends State<HomeRootScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(2),
                       decoration: BoxDecoration(
-                        color: Color(0xFF8F5CF7),
+                        color: Color(0xFFEC4899),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
                       child: Text(
                         '$cartCount',
                         style: const TextStyle(
@@ -83,4 +83,4 @@ class HomeRootScreenState extends State<HomeRootScreen> {
       ),
     );
   }
-} 
+}
