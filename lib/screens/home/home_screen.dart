@@ -28,6 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    print('HomeScreen: initState called');
     _diamondsFuture = AuthService().fetchDiamonds();
     _pageController = PageController();
     _fetchCarouselImages();
@@ -42,16 +43,28 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     try {
       final baseUrl = dotenv.env['BACKEND_API_BASE_URL'];
+      print(
+        'Carousel: baseUrl = '
+                '[33m'
+                '[1m'
+                '[4m'
+                '[0m' +
+            (baseUrl ?? 'NULL'),
+      );
       if (baseUrl == null || baseUrl.isEmpty) {
         if (!mounted) return;
         setState(() {
           _carouselError = 'App not initialized. Please restart.';
           _carouselLoading = false;
         });
+        print('Carousel: baseUrl is null or empty');
         return;
       }
       final url = Uri.parse('$baseUrl/carousal-images');
+      print('Carousel: Fetching from URL: $url');
       final response = await http.get(url);
+      print('Carousel: Response status: ${response.statusCode}');
+      print('Carousel: Response body: ${response.body}');
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data is List) {
@@ -64,12 +77,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 .toList();
             _carouselLoading = false;
           });
+          print('Carousel: Loaded ${_carouselImages.length} images');
         } else {
           if (!mounted) return;
           setState(() {
             _carouselError = 'Invalid carousel data.';
             _carouselLoading = false;
           });
+          print('Carousel: Invalid data format');
         }
       } else {
         if (!mounted) return;
@@ -77,6 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _carouselError = 'Failed to fetch carousel images.';
           _carouselLoading = false;
         });
+        print('Carousel: Failed to fetch, status: ${response.statusCode}');
       }
     } catch (e) {
       if (!mounted) return;
@@ -84,6 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _carouselError = 'Error: $e';
         _carouselLoading = false;
       });
+      print('Carousel: Exception: $e');
     }
   }
 

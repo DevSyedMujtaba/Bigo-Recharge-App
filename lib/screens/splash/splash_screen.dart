@@ -30,23 +30,23 @@ class _SplashScreenState extends State<SplashScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              'assets/images/bigo-recharge-logo1.png',
-              width: 120,
-              height: 120,
+              'assets/images/bigo-recharge-logo.png',
+              width: 220,
+              height: 220,
             ),
-            const SizedBox(height: 24),
-            const Text(
-              'BIGO RECHARGE',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF3B338B),
-                letterSpacing: 1.5,
-              ),
-            ),
+            // const SizedBox(height: 24),
+            // const Text(
+            //   'BIGO RECHARGE',
+            //   style: TextStyle(
+            //     fontSize: 28,
+            //     fontWeight: FontWeight.bold,
+            //     color: Color(0xFF3B338B),
+            //     letterSpacing: 1.5,
+            //   ),
+            // ),
           ],
         ),
       ),
     );
   }
-} 
+}

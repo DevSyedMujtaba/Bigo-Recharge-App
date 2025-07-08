@@ -54,15 +54,31 @@ class AuthService {
 
   Future<List<Map<String, dynamic>>> fetchDiamonds() async {
     final baseUrl = dotenv.env['BACKEND_API_BASE_URL'] ?? '';
+    print('Diamonds: baseUrl = ' + baseUrl);
     final url = Uri.parse('$baseUrl/products/');
-    final response = await http.get(url);
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      if (data is List) {
-        return List<Map<String, dynamic>>.from(data);
-      } else if (data is Map && data['products'] is List) {
-        return List<Map<String, dynamic>>.from(data['products']);
+    print('Diamonds: Fetching from URL: $url');
+    try {
+      final response = await http.get(url);
+      print('Diamonds: Response status: ${response.statusCode}');
+      print('Diamonds: Response body: ${response.body}');
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data is List) {
+          print('Diamonds: Loaded list with length [32m${data.length}[0m');
+          return List<Map<String, dynamic>>.from(data);
+        } else if (data is Map && data['products'] is List) {
+          print(
+            'Diamonds: Loaded map with products list, length [32m${data['products'].length}[0m',
+          );
+          return List<Map<String, dynamic>>.from(data['products']);
+        } else {
+          print('Diamonds: Invalid data format');
+        }
+      } else {
+        print('Diamonds: Failed to fetch, status: ${response.statusCode}');
       }
+    } catch (e) {
+      print('Diamonds: Exception: $e');
     }
     return [];
   }

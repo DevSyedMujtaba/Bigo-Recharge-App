@@ -908,42 +908,39 @@ class _FAQScreenState extends State<FAQScreen> {
         ),
         elevation: 0,
       ),
-      body: SingleChildScrollView(
+      body: ListView(
         padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Common Questions',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'If you have other questions, feel free to contact our support team anytime — we are here to help!.',
-            ),
-            const SizedBox(height: 20),
-            ExpansionPanelList(
-              expansionCallback: (int index, bool isExpanded) {
-                setState(() {
-                  _expanded[index] = !isExpanded;
-                });
-              },
-              children: List.generate(_faq.length, (index) {
-                return ExpansionPanel(
-                  canTapOnHeader: true,
-                  isExpanded: _expanded[index],
-                  headerBuilder: (context, isExpanded) => ListTile(
-                    title: Text(
-                      _faq[index]['question']!,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
+        children: [
+          const Text(
+            'Common Questions',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'If you have other questions, feel free to contact our support team anytime — we are here to help!.',
+          ),
+          const SizedBox(height: 20),
+          ..._faq.map(
+            (item) => ExpansionTile(
+              title: Text(
+                item['question']!,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 8.0,
                   ),
-                  body: ListTile(title: Text(_faq[index]['answer']!)),
-                );
-              }),
+                  child: Text(
+                    item['answer']!,
+                    style: const TextStyle(color: Colors.black),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
